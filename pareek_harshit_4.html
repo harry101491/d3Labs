@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Country Scatter Plot</title>
+	<style type="text/css">
+	ul{
+		float: left;
+	}
+	h1{
+		background-color: black;
+		color: white
+	}
+	svg{
+		width: 600px;
+		height: 700px;
+		float: right;
+		position: relative;
+		margin-right: 50px
+	}
+	.domain{
+		fill: none;
+		stroke: #000
+	}
+	.tick{
+		font-size: 12
+	}
+	.tick line {
+		stroke: #ccc
+	}
+
+	</style>
+</head>
+<body>
+<h1>Gapiminder-Wealth and Health of Nations</h1>
+<h2> Countries </h2>
+<div id="country">
+	<ul id="listCountry">	
+	</ul>
+</div>
+<svg>
+   	<g id="scatter"></g>
+</svg> 
+</body>
+<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script type="text/javascript">
+	var data = [];
+	var year = 2008;
+	d3.json("week4.json",function(error,result)
+	{
+		data = result;
+		renderList(data);
+	});
+	function renderList(data)
+	{
+		var countryData = d3.select("#listCountry");
+		var element = countryData.selectAll("li").data(data,function(d){
+			return d.name;
+		});
+		element.enter()
+				.append("li")
+				.text(function(d,i){
+					return (d.name);
+				})
+				.style({
+					"list-style":"none"
+				});
+		var filteredData = data.filter(function(d){
+			if(d.income[year] != undefined && d.lifeExpectancy[year] != undefined && d.population[year] != undefined)
+			{
+				return d;
+			}
+		});
+		renderScatter(filteredData);
+	}
+	function renderScatter(filteredData)
+	{
+		var dotData = d3.select("#scatter");
+		var width = 500,
+			height = 600,
+			margin = {top:20,left:50,right:20,bottom:10};
+		var innerWidth = width-margin.left-margin.right;
+		var innerLength = height-margin.top-margin.bottom;
+		dotData.attr("transform","translate("+margin.left+","+margin.top+")");
+		var xScale = d3.scale.linear()
+							 .range([0,innerWidth])
+							 .domain(d3.extent(filteredData,function(d){
+							 	return d.income[year];
+							 }));
+		var yScale = d3.scale.linear()
+							 .range([innerLength,0])
+							 .domain(d3.extent(filteredData,function(d){
+							 	return d.lifeExpectancy[year];
+							 }));
+		var sizeScale = d3.scale.linear()
+								.range([50,1000])
+								.domain(d3.extent(filteredData,function(d){
+									return d.population[year];
+								}));
+		var colorScale = d3.scale.category10();
+		// axis code
+		var xAxisGroup = dotData.append("g")
+					   			.attr("transform","translate("+ -10 +","+(margin.top+innerLength-20)+")");
+		var yAxisGroup = dotData.append("g")
+								.attr("transform","translate("+ -10 +","+ 0 + ")");
+		var xAxis = d3.svg.axis()
+			  		  .scale(xScale)
+			  		  .tickSize(-innerLength)
+			  		  .orient("bottom");
+		var yAxis = d3.svg.axis()
+					  .tickSize(-innerWidth)
+					  .scale(yScale)
+					  .orient("left");
+		xAxisGroup.call(xAxis);
+		yAxisGroup.call(yAxis);
+		var everyPoint = dotData.selectAll("circle")
+								.data(filteredData);
+		everyPoint.enter()
+				  .append("circle")
+				  .attr("opacity",0.9)
+				  .attr("r",function(d,i){
+				  		return Math.sqrt(((sizeScale(d.population[year]))/Math.PI));
+				  })
+				  .attr("cx",
+				  function(d,i)
+				  {
+				  		return xScale(d.income[year]);
+				  })
+				  .attr("cy",
+				  function(d,i)
+				  {
+				  		return yScale(d.lifeExpectancy[year]);
+				  })
+				  .attr("fill",function(d){
+				  		return colorScale(d.region);
+				  });
+	}
+</script>
+</html>

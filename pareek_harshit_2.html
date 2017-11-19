@@ -1,0 +1,65 @@
+<html>
+<head>
+	<title>D3</title>
+	<style type="text/css">
+	.item{
+		box-shadow: 10px 10px 10px #f00;
+		border: solid 10px #fff;
+		width: 100px
+	}
+	</style>
+</head>
+<body>
+	<h1>D3 Labs</h1>
+	<div id="viz">
+	<input type="text" id="newNumber">
+	<input type="submit" onclick="addNumber()" value="Add">
+	</div>
+</body>
+<script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script type="text/javascript">
+	var viz = d3.select("#viz");
+	var numbers = [];
+	d3.json("week3.json",function(error,result){
+		numbers = result;
+		//console.log(numbers);
+		render();
+	});
+	function render()
+	{ 
+		var changes = viz.selectAll("div")
+							.data(numbers,function(d) {return d.name;});
+
+			changes.enter()
+					 .append("div")
+					 .style({
+					 	color: "#ccc",
+					 	"background-color":"#123" 
+					 })
+					 .attr("class","item")
+				 .text(
+				 function(d,i)
+				 {
+				 	return(d.name);
+				 });
+
+			changes.on("click",
+					function(d,i)
+					{
+						numbers.splice(i,1);
+						render();
+					});
+
+			changes.exit()
+					.remove();
+	}
+	render();
+	function addNumber()
+	{
+		var newNumber = d3.select("#newNumber")
+							.node().value;
+		numbers.push(newNumber);
+		render();
+	}
+</script>
+</html>
